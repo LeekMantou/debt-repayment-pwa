@@ -214,7 +214,7 @@
     renderSchedule();
     els.scheduleDialog.showModal();
     const current=els.scheduleList.querySelector(".schedule-current");
-    if(current)els.scheduleDialog.querySelector(".page-inner").scrollTop=current.offsetTop-els.scheduleList.offsetTop;
+    if(current)els.scheduleDialog.querySelector(".page-inner").scrollTop=Math.max(0,current.offsetTop-els.scheduleList.offsetTop-72);
   });
   $("previousMonth").addEventListener("click",()=>{monthCursor=shiftMonth(monthCursor,-1);render()});
   $("nextMonth").addEventListener("click",()=>{monthCursor=shiftMonth(monthCursor,1);render()});
