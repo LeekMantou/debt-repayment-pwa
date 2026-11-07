@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101b29">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="还款清单">
+  <title>还款清单</title>
+  <meta name="description" content="离线使用的个人负债还款台账">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">↗</span><span>还款清单</span></div>
+      <button class="icon-button" id="settingsButton" aria-label="数据与设置" type="button">•••</button>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-top"><span class="eyebrow">我的还款进度</span><span class="hero-date" id="todayLabel"></span></div>
+        <h1 id="heroTitle">预计剩余待还</h1>
+        <div class="hero-amount" id="totalBalance">¥0.00</div>
+        <div class="hero-rule"></div>
+        <div class="hero-stats">
+          <div><span>本月待还</span><strong id="monthRemaining">¥0.00</strong></div>
+          <div><span>进行中的负债</span><strong id="activeCount">0 笔</strong></div>
+        </div>
+      </section>
+
+      <section class="section due-section">
+        <div class="section-head"><div><p class="section-kicker">还款计划</p><h2><button class="section-link" id="viewScheduleButton" type="button">每月还款 <span aria-hidden="true">›</span></button></h2></div><div class="month-nav"><button id="previousMonth" type="button" aria-label="上个月">‹</button><strong id="selectedMonth"></strong><button id="nextMonth" type="button" aria-label="下个月">›</button></div></div>
+        <div class="month-summary"><span>本月计划还款总额</span><strong id="monthTotal">¥0.00</strong><div><span>已还（含默认） <b id="monthPaid">¥0.00</b></span><span>待还 <b id="monthDue">¥0.00</b></span></div></div>
+        <div id="dueList" class="due-list"></div>
+        <p class="plan-note">计划日过后默认视为已还，余额据此估算；可在负债详情记录实际还款。</p>
+      </section>
+
+      <section class="section debts-section">
+        <div class="section-head"><div><p class="section-kicker">账本</p><h2>我的负债</h2></div><button class="text-action" id="addDebtButton" type="button">＋ 添加</button></div>
+        <div id="debtList" class="debt-list"></div>
+      </section>
+      <p class="privacy-note">数据仅保存在这台设备的当前浏览器中。请定期导出备份。</p>
+    </main>
+  </div>
+  <button class="floating-add" id="floatingAdd" type="button"><span>＋</span> 添加负债</button>
+
+  <dialog class="sheet" id="debtDialog">
+    <form id="debtForm" class="sheet-inner">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title"><button class="plain-button" type="button" data-close="debtDialog">取消</button><h2 id="debtDialogTitle">添加负债</h2><button class="plain-button accent" type="submit">保存</button></div>
+      <label class="field"><span>名称</span><input id="debtName" maxlength="30" placeholder="例如：信用卡、车贷" required></label>
+      <label class="field"><span>类型</span><select id="debtType"><option value="credit">信用卡</option><option value="loan">贷款</option><option value="installment">分期</option><option value="other">其他</option></select></label>
+      <label class="field"><span>初始欠款</span><div class="money-input"><span>¥</span><input id="debtBalance" inputmode="decimal" placeholder="0.00" required></div></label>
+      <label class="field"><span>每月固定还款</span><div class="money-input"><span>¥</span><input id="debtMonthlyAmount" inputmode="decimal" placeholder="0.00" required></div></label>
+      <label class="field"><span>初次还款日</span><input id="debtFirstDueDate" type="date" required></label>
+      <p class="field-help">从初次还款日起，每月同一天按固定金额生成计划；月底日期顺延到该月最后一天，最后一期按剩余欠款收尾。已过计划日默认已还。</p>
+      <p class="form-error" id="debtError" role="alert"></p>
+      <button class="delete-action" id="deleteDebtButton" type="button" hidden>删除这笔负债</button>
+    </form>
+  </dialog>
+
+  <dialog class="sheet" id="paymentDialog">
+    <form id="paymentForm" class="sheet-inner">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title"><button class="plain-button" type="button" data-close="paymentDialog">取消</button><h2>记录还款</h2><button class="plain-button accent" type="submit">保存</button></div>
+      <p class="dialog-subtitle" id="paymentDebtName"></p>
+      <label class="field"><span>还款金额</span><div class="money-input"><span>¥</span><input id="paymentAmount" inputmode="decimal" placeholder="0.00" required></div></label>
+      <label class="field"><span>还款日期</span><input id="paymentDate" type="date" required></label>
+      <label class="field"><span>备注 <em>可选</em></span><input id="paymentNote" maxlength="80" placeholder="例如：银行卡转账"></label>
+      <p class="field-help">手动记录会覆盖对应的默认还款金额，不会重复扣款。利息和手续费请按账单调整初始欠款。</p>
+      <p class="form-error" id="paymentError" role="alert"></p>
+    </form>
+  </dialog>
+
+  <dialog class="page-dialog" id="detailDialog">
+    <div class="page-inner">
+      <div class="page-top"><button class="plain-button" type="button" data-close="detailDialog">‹ 返回</button><button class="plain-button accent" id="editDebtButton" type="button">编辑</button></div>
+      <div id="detailContent"></div>
+    </div>
+  </dialog>
+
+  <dialog class="page-dialog" id="scheduleDialog">
+    <div class="page-inner">
+      <div class="page-top"><button class="plain-button" type="button" data-close="scheduleDialog">‹ 返回</button><h2>逐月还款计划</h2><span></span></div>
+      <p class="schedule-intro" id="scheduleIntro"></p>
+      <div id="scheduleList" class="schedule-list"></div>
+      <p class="plan-note">每月固定金额，最后一期按剩余欠款计算。已过日期默认已还，金额为计划估算。</p>
+    </div>
+  </dialog>
+
+  <dialog class="page-dialog" id="settingsDialog">
+    <div class="page-inner">
+      <div class="page-top"><button class="plain-button" type="button" data-close="settingsDialog">‹ 返回</button><h2>数据与设置</h2><span></span></div>
+      <div class="settings-block"><h3>备份数据</h3><p>导出 JSON 文件，建议保存到 iCloud Drive。恢复备份会替换当前全部记录。</p><button class="setting-row" id="exportButton" type="button">导出备份 <span>↗</span></button><button class="setting-row" id="importButton" type="button">恢复备份 <span>›</span></button><input id="importFile" type="file" accept=".json,application/json" hidden><small id="backupStatus"></small></div>
+      <div class="settings-block"><h3>体验原型</h3><p>想先看看界面？空账本时可以载入两笔示例负债。</p><button class="setting-row" id="demoButton" type="button">载入示例数据 <span>›</span></button></div>
+      <p class="settings-footer">还款清单 · 本地离线原型<br>本应用不自动计算利息或连接银行。</p>
+    </div>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
