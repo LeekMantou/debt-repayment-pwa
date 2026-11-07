@@ -2,6 +2,12 @@
 
 本地离线的负债还款 PWA。静态文件位于 `dist/`，可部署到 HTTPS 静态托管。
 
+## 在线使用
+
+<https://leekmantou.github.io/debt-repayment-pwa/>
+
+在 iPhone Safari 中打开后，通过分享菜单选择“添加到主屏幕”。负债记录只保存在当前设备的浏览器本地存储中，不会上传到 GitHub；请定期导出 JSON 备份。
+
 ## 还款计划
 
 - 输入初始欠款、每月固定还款金额和初次还款日。
